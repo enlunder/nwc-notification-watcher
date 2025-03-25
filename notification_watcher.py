@@ -49,19 +49,19 @@ def parse_and_print_notification(content):
     output = "⚡️ %1.1f sats %s! %s" % ( d["amount"]/1000.0, payment_type, description)
     print(output)
 
-def watch_for_notifications():
-    nwc_string = "nostr+walletconnect://..."
     
+def watch_for_notifications():
+    nwc_string = os.environ['NWC']
     wallet_service_public_key, relay, secret = extract_parts(nwc_string)
     private_key = PrivateKey.from_hex(secret)
-    
+
     relay_manager.add_relay(relay)
 
     start_timestamp = get_timestamp()-10.0
     filters = FiltersList( [ Filters(
         pubkey_refs=[private_key.public_key.hex()],
         kinds=[23196], limit=10),] )
-
+    
     # List to store previously seen event ids
     messages_done = []
     

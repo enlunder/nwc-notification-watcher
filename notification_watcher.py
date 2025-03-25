@@ -21,10 +21,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from urllib.parse import urlparse, parse_qs
 
-
-relay_manager = RelayManager(timeout=2)
-
-
 def extract_parts(url):
     u = urlparse(url)
     q = parse_qs(u.query)
@@ -48,13 +44,13 @@ def parse_and_print_notification(content):
         description = ""
     output = "⚡️ %1.1f sats %s! %s" % ( d["amount"]/1000.0, payment_type, description)
     print(output)
-
     
 def watch_for_notifications():
     nwc_string = os.environ['NWC']
     wallet_service_public_key, relay, secret = extract_parts(nwc_string)
     private_key = PrivateKey.from_hex(secret)
 
+    relay_manager = RelayManager(timeout=2)
     relay_manager.add_relay(relay)
 
     start_timestamp = get_timestamp()-10.0

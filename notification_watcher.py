@@ -1,4 +1,3 @@
-import requests
 import time
 import ssl
 import os
@@ -42,13 +41,15 @@ def parse_and_print_notification(content):
         description = "(%s)" % n["description"]
     else:
         description = ""
-    output = "⚡️ %1.1f sats %s! %s" % ( d["amount"]/1000.0, payment_type, description)
+    output = "⚡️ %1.0f sats %s! %s" % ( n["amount"]/1000.0, payment_type, description)
     print(output)
     
 def watch_for_notifications():
     nwc_string = os.environ['NWC']
     wallet_service_public_key, relay, secret = extract_parts(nwc_string)
     private_key = PrivateKey.from_hex(secret)
+    print("Pubkey: " + private_key.public_key.bech32())
+    print("Pubkey (hex): " + private_key.public_key.hex())
 
     relay_manager = RelayManager(timeout=2)
     relay_manager.add_relay(relay)
@@ -77,16 +78,19 @@ def watch_for_notifications():
             if(event_msg.event.id in messages_done):
                 continue
 
-            # Add this event to the list of seen events
+            # Add this event to the list of seen events 
             messages_done.append(event_msg.event.id)
-
+            
             # According to NIP47, kind 23196 is a notification event
             if event_msg.event.kind == 23196:
+                public_key = PublicKey(wallet_service_public_key)
                 msg_decrypted = EncryptedDirectMessage()
                 msg_decrypted.decrypt(private_key_hex=private_key.hex(),
                                       encrypted_message=event_msg.event.content,
                                       public_key_hex=public_key.hex())
-            
+
+                parse_and_print_notification(msg_decrypted.cleartext_content)
+                
             gc.collect()
 
         time.sleep(2)
